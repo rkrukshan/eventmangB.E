@@ -16,7 +16,6 @@ namespace EventManagementSystem.Controllers
             _context = context;
         }
 
-        // GET: api/Events
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EventDto>>> GetEvents()
         {
@@ -32,7 +31,6 @@ namespace EventManagementSystem.Controllers
                 .ToListAsync();
         }
 
-        // GET: api/Events/5
         [HttpGet("{id}")]
         public async Task<ActionResult<EventDto>> GetEvent(int id)
         {
@@ -56,7 +54,6 @@ namespace EventManagementSystem.Controllers
             return eventItem;
         }
 
-        // POST: api/Events
         [HttpPost]
         public async Task<ActionResult<EventDto>> PostEvent(CreateEventDto createEventDto)
         {
@@ -88,7 +85,6 @@ namespace EventManagementSystem.Controllers
             return CreatedAtAction("GetEvent", new { id = eventItem.Id }, eventDto);
         }
 
-        // PUT: api/Events/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEvent(int id, UpdateEventDto updateEventDto)
         {
@@ -129,7 +125,6 @@ namespace EventManagementSystem.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Events/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEvent(int id)
         {

@@ -16,7 +16,6 @@ namespace EventManagementSystem.Controllers
             _context = context;
         }
 
-        // GET: api/EventBookings
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EventBookingDto>>> GetEventBookings()
         {
@@ -33,7 +32,6 @@ namespace EventManagementSystem.Controllers
                 .ToListAsync();
         }
 
-        // GET: api/EventBookings/5
         [HttpGet("{id}")]
         public async Task<ActionResult<EventBookingDto>> GetEventBooking(int id)
         {
@@ -58,11 +56,9 @@ namespace EventManagementSystem.Controllers
             return eventBooking;
         }
 
-        // POST: api/EventBookings
         [HttpPost]
         public async Task<ActionResult<EventBookingDto>> PostEventBooking(CreateEventBookingDto createDto)
         {
-            // Validate event and user exist
             var eventItem = await _context.Events.FindAsync(createDto.EventId);
             var user = await _context.Users.FindAsync(createDto.UserId);
 
@@ -71,7 +67,6 @@ namespace EventManagementSystem.Controllers
                 return BadRequest("Invalid Event ID or User ID");
             }
 
-            // Check for existing booking
             var existingBooking = await _context.EventBookings
                 .FirstOrDefaultAsync(eb => eb.EventId == createDto.EventId && eb.UserId == createDto.UserId);
 
@@ -105,7 +100,6 @@ namespace EventManagementSystem.Controllers
             return CreatedAtAction("GetEventBooking", new { id = eventBooking.Id }, resultDto);
         }
 
-        // PUT: api/EventBookings/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEventBooking(int id, UpdateEventBookingDto updateDto)
         {
@@ -115,7 +109,6 @@ namespace EventManagementSystem.Controllers
                 return NotFound();
             }
 
-            // Validate event and user exist
             var eventItem = await _context.Events.FindAsync(updateDto.EventId);
             var user = await _context.Users.FindAsync(updateDto.UserId);
 
@@ -124,7 +117,6 @@ namespace EventManagementSystem.Controllers
                 return BadRequest("Invalid Event ID or User ID");
             }
 
-            // Check for existing booking with different ID
             var existingBooking = await _context.EventBookings
                 .FirstOrDefaultAsync(eb => eb.EventId == updateDto.EventId &&
                                          eb.UserId == updateDto.UserId &&
@@ -159,7 +151,6 @@ namespace EventManagementSystem.Controllers
             return NoContent();
         }
 
-        // DELETE: api/EventBookings/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEventBooking(int id)
         {

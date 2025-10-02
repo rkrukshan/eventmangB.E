@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using EventManagementSystem.Data;
 using EventManagementSystem.Models;
+using BCrypt.Net;
+//using EventManagementSystem.Models;
 
 namespace EventManagementSystem.Controllers
 {
@@ -16,7 +18,6 @@ namespace EventManagementSystem.Controllers
             _context = context;
         }
 
-        // GET: api/Users
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
@@ -31,7 +32,6 @@ namespace EventManagementSystem.Controllers
                 .ToListAsync();
         }
 
-        // GET: api/Users/5
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> GetUser(int id)
         {
@@ -54,17 +54,14 @@ namespace EventManagementSystem.Controllers
             return user;
         }
 
-        // POST: api/Users
         [HttpPost]
         public async Task<ActionResult<UserDto>> PostUser(CreateUserDto createUserDto)
         {
-            // Check if username already exists
             if (await _context.Users.AnyAsync(u => u.Username == createUserDto.Username))
             {
                 return BadRequest("Username already exists");
             }
 
-            // Hash password
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password);
 
             var user = new User
@@ -89,7 +86,6 @@ namespace EventManagementSystem.Controllers
             return CreatedAtAction("GetUser", new { id = user.Id }, userDto);
         }
 
-        // PUT: api/Users/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UpdateUserDto updateUserDto)
         {
@@ -99,7 +95,6 @@ namespace EventManagementSystem.Controllers
                 return NotFound();
             }
 
-            // Check if username already exists (excluding current user)
             if (await _context.Users.AnyAsync(u => u.Username == updateUserDto.Username && u.Id != id))
             {
                 return BadRequest("Username already exists");
@@ -108,7 +103,6 @@ namespace EventManagementSystem.Controllers
             user.Username = updateUserDto.Username;
             user.Role = updateUserDto.Role;
 
-            // Only update password if provided
             if (!string.IsNullOrEmpty(updateUserDto.Password))
             {
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(updateUserDto.Password);
@@ -135,7 +129,6 @@ namespace EventManagementSystem.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Users/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -154,6 +147,22 @@ namespace EventManagementSystem.Controllers
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.Id == id);
+        }
+
+        public static async Task SeedAdminAsync(AppDbContext db)
+        {
+            if (!db.Users.Any(u => u.Role == "admin"))
+            {
+                var admin = new User
+                {
+                    Username = "admin",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"), // hashed password
+                    Role = "admin"
+                };
+
+                db.Users.Add(admin);
+                await db.SaveChangesAsync();
+            }
         }
     }
 }
