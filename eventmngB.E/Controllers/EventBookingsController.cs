@@ -157,7 +157,7 @@ namespace EventManagementSystem.Controllers
             var eventBooking = await _context.EventBookings.FindAsync(id);
             if (eventBooking == null)
             {
-                return NotFound();
+                return NotFound(); 
             }
 
             _context.EventBookings.Remove(eventBooking);
