@@ -1,13 +1,11 @@
-﻿using EventManagementSystem.Data;
-using EventManagementSystem.Services;
-using EventManagementSystem.Models;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using Microsoft.EntityFrameworkCore;
+using EventManagementSystem.Data;
 using System.Text.Json.Serialization;
-using BCrypt.Net; // BCrypt.Net-Next NuGet package
+using EventManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
         new MySqlServerVersion(new Version(8, 0, 21))));
@@ -22,8 +20,10 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Auth Service
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// ✅ Allow ALL origins, headers, and methods
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -35,18 +35,21 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// ✅ Use the "AllowAll" CORS policy
 app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
+// Create database and seed data
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -62,31 +65,4 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await SeedAdminAsync(db);
-}
-
 app.Run();
-
-static async Task SeedAdminAsync(AppDbContext db)
-{
-    if (!db.Users.Any(u => u.Role == "admin"))
-    {
-        var admin = new User
-        {
-            Username = "admin",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-            Role = "admin"
-        };
-
-        db.Users.Add(admin);
-        await db.SaveChangesAsync();
-        Console.WriteLine("✅ Admin user created: username=admin, password=Admin@123");
-    }
-    else
-    {
-        Console.WriteLine("ℹ️ Admin already exists, skipping seed.");
-    }
-}

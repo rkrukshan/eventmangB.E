@@ -15,6 +15,7 @@ namespace EventManagementSystem.Services
 
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
         {
+            // Check if user already exists
             if (await UserExistsAsync(request.Username))
             {
                 return new AuthResponse
@@ -24,6 +25,7 @@ namespace EventManagementSystem.Services
                 };
             }
 
+            // Validate input
             if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
             {
                 return new AuthResponse
@@ -42,8 +44,10 @@ namespace EventManagementSystem.Services
                 };
             }
 
+            // Hash password
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
+            // Create user
             var user = new User
             {
                 Username = request.Username.Trim(),
@@ -65,51 +69,29 @@ namespace EventManagementSystem.Services
             };
         }
 
-        //public async Task<AuthResponse> LoginAsync(LoginRequest request)
-        //{
-        //    var user = await _context.Users
-        //        .FirstOrDefaultAsync(u => u.Username == request.Username);
-
-        //    if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-        //    {
-        //        return new AuthResponse
-        //        {
-        //            Success = false,
-        //            Message = "Invalid username or password"
-        //        };
-        //    }
-
-        //    return new AuthResponse
-        //    {
-        //        Success = true,
-        //        Message = "Login successful",
-        //        Username = user.Username,
-        //        Role = user.Role,
-        //        UserId = user.Id
-        //    };
-        //}
         public async Task<AuthResponse> LoginAsync(LoginRequest request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
-            if (user == null)
-                return new AuthResponse { Success = false, Message = "User not found" };
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == request.Username);
 
-            bool passwordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
-            if (!passwordValid)
-                return new AuthResponse { Success = false, Message = "Invalid password" };
+            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            {
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Invalid username or password"
+                };
+            }
 
-            if (user.Role != "admin")
-                return new AuthResponse { Success = false, Message = "Not an admin user" };
-
-            // generate JWT token, etc.
             return new AuthResponse
             {
                 Success = true,
-                //Token = "<jwt-token-here>",
-                //User = new { user.Id, user.Username, user.Role }
+                Message = "Login successful",
+                Username = user.Username,
+                Role = user.Role,
+                UserId = user.Id
             };
         }
-
 
         public async Task<bool> UserExistsAsync(string username)
         {
