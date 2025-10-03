@@ -19,12 +19,7 @@ namespace EventManagementSystem.Controllers
         public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)
         {
             var result = await _authService.RegisterAsync(request);
-
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-
+            if (!result.Success) return BadRequest(result);
             return Ok(result);
         }
 
@@ -32,12 +27,15 @@ namespace EventManagementSystem.Controllers
         public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
         {
             var result = await _authService.LoginAsync(request);
+            if (!result.Success) return Unauthorized(result);
+            return Ok(result);
+        }
 
-            if (!result.Success)
-            {
-                return Unauthorized(result);
-            }
-
+        [HttpPost("admin/login")]
+        public async Task<ActionResult<AuthResponse>> AdminLogin(LoginRequest request)
+        {
+            var result = await _authService.AdminLoginAsync(request);
+            if (!result.Success) return Unauthorized(result);
             return Ok(result);
         }
     }

@@ -15,7 +15,7 @@ namespace EventManagementSystem.Models
         public string PasswordHash { get; set; } = string.Empty;
 
         [StringLength(10)]
-        public string Role { get; set; } = "user"; // "admin" or "user"
+        public string Role { get; set; } = "user"; 
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

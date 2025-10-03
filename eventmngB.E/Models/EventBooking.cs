@@ -17,11 +17,9 @@ namespace EventManagementSystem.Models
 
         public DateTime BookingDate { get; set; } = DateTime.UtcNow;
 
-        // Foreign keys
         public int EventId { get; set; }
         public int UserId { get; set; }
 
-        // Navigation properties
         [JsonIgnore]
         public Event Event { get; set; } = null!;
 

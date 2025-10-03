@@ -17,7 +17,6 @@ namespace EventManagementSystem.Models
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        // Navigation property for bookings
         [JsonIgnore]
         public ICollection<EventBooking> Bookings { get; set; } = new List<EventBooking>();
     }

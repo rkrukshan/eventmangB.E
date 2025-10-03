@@ -15,44 +15,25 @@ namespace EventManagementSystem.Services
 
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
         {
-            // Check if user already exists
+            if (IsReservedAdminUsername(request.Username))
+            {
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "This username is reserved for administrators"
+                };
+            }
+
             if (await UserExistsAsync(request.Username))
-            {
-                return new AuthResponse
-                {
-                    Success = false,
-                    Message = "Username already exists"
-                };
-            }
+                return new AuthResponse { Success = false, Message = "Username already exists" };
 
-            // Validate input
-            if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
-            {
-                return new AuthResponse
-                {
-                    Success = false,
-                    Message = "Username and password are required"
-                };
-            }
-
-            if (request.Password.Length < 6)
-            {
-                return new AuthResponse
-                {
-                    Success = false,
-                    Message = "Password must be at least 6 characters long"
-                };
-            }
-
-            // Hash password
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-            // Create user
             var user = new User
             {
                 Username = request.Username.Trim(),
                 PasswordHash = passwordHash,
-                Role = "user",
+                Role = "user", 
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -75,11 +56,14 @@ namespace EventManagementSystem.Services
                 .FirstOrDefaultAsync(u => u.Username == request.Username);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+                return new AuthResponse { Success = false, Message = "Invalid username or password" };
+
+            if (user.Role == "admin")
             {
                 return new AuthResponse
                 {
                     Success = false,
-                    Message = "Invalid username or password"
+                    Message = "Administrators must use the admin login portal"
                 };
             }
 
@@ -93,10 +77,45 @@ namespace EventManagementSystem.Services
             };
         }
 
+        public async Task<AuthResponse> AdminLoginAsync(LoginRequest request)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == request.Username);
+
+            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+                return new AuthResponse { Success = false, Message = "Invalid username or password" };
+
+            if (user.Role != "admin")
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Access denied. Admin privileges required."
+                };
+
+            return new AuthResponse
+            {
+                Success = true,
+                Message = "Admin login successful",
+                Username = user.Username,
+                Role = user.Role,
+                UserId = user.Id
+            };
+        }
+
+        private bool IsReservedAdminUsername(string username)
+        {
+            var reservedUsernames = new List<string>
+            {
+                "admin", "administrator", "superadmin", "root",
+                "sysadmin", "moderator", "staff", "support"
+            };
+
+            return reservedUsernames.Contains(username.ToLower().Trim());
+        }
+
         public async Task<bool> UserExistsAsync(string username)
         {
-            return await _context.Users
-                .AnyAsync(u => u.Username == username);
+            return await _context.Users.AnyAsync(u => u.Username == username);
         }
     }
 }

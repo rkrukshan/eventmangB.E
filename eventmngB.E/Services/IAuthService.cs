@@ -6,6 +6,8 @@ namespace EventManagementSystem.Services
     {
         Task<AuthResponse> RegisterAsync(RegisterRequest request);
         Task<AuthResponse> LoginAsync(LoginRequest request);
+
+        Task<AuthResponse> AdminLoginAsync(LoginRequest request);
         Task<bool> UserExistsAsync(string username);
     }
 }
