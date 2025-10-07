@@ -16,14 +16,16 @@ namespace EventManagementSystem.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<EventBookingDto>>> GetEventBookings()
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<IEnumerable<EventBookingDto>>> GetEventBookings(int userId)
         {
             return await _context.EventBookings
+                .Where(eb => eb.UserId == userId)
                 .Select(eb => new EventBookingDto
                 {
                     Id = eb.Id,
                     EventName = eb.EventName,
+                    Description = eb.Event.Description,
                     UserName = eb.UserName,
                     BookingDate = eb.BookingDate,
                     EventId = eb.EventId,
@@ -31,6 +33,8 @@ namespace EventManagementSystem.Controllers
                 })
                 .ToListAsync();
         }
+
+
 
         [HttpGet("{id}")]
         public async Task<ActionResult<EventBookingDto>> GetEventBooking(int id)
@@ -41,6 +45,7 @@ namespace EventManagementSystem.Controllers
                 {
                     Id = eb.Id,
                     EventName = eb.EventName,
+                    Description = eb.Event.Description,
                     UserName = eb.UserName,
                     BookingDate = eb.BookingDate,
                     EventId = eb.EventId,
@@ -91,6 +96,7 @@ namespace EventManagementSystem.Controllers
             {
                 Id = eventBooking.Id,
                 EventName = eventBooking.EventName,
+                Description = eventItem.Description,
                 UserName = eventBooking.UserName,
                 BookingDate = eventBooking.BookingDate,
                 EventId = eventBooking.EventId,
@@ -151,20 +157,24 @@ namespace EventManagementSystem.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEventBooking(int id)
-        {
-            var eventBooking = await _context.EventBookings.FindAsync(id);
-            if (eventBooking == null)
-            {
-                return NotFound(); 
-            }
+        [HttpDelete("{id}/user/{userId}")]
+public async Task<IActionResult> DeleteEventBooking(int id, int userId)
+{
+    var eventBooking = await _context.EventBookings
+        .FirstOrDefaultAsync(b => b.Id == id && b.UserId == userId);
 
-            _context.EventBookings.Remove(eventBooking);
-            await _context.SaveChangesAsync();
+    if (eventBooking == null)
+    {
+        return Unauthorized("You can only delete your own bookings.");
+    }
 
-            return NoContent();
-        }
+    _context.EventBookings.Remove(eventBooking);
+    await _context.SaveChangesAsync();
+
+    return NoContent();
+}
+
+
 
         private bool EventBookingExists(int id)
         {

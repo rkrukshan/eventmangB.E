@@ -149,20 +149,6 @@ namespace EventManagementSystem.Controllers
             return _context.Users.Any(e => e.Id == id);
         }
 
-        public static async Task SeedAdminAsync(AppDbContext db)
-        {
-            if (!db.Users.Any(u => u.Role == "admin"))
-            {
-                var admin = new User
-                {
-                    Username = "admin",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"), // hashed password
-                    Role = "admin"
-                };
-
-                db.Users.Add(admin);
-                await db.SaveChangesAsync();
-            }
-        }
+       
     }
 }

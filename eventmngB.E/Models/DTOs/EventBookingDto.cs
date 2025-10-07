@@ -6,6 +6,7 @@ namespace EventManagementSystem.Models
     {
         public int Id { get; set; }
         public string EventName { get; set; } = string.Empty;
+        public string? Description { get; set; }
         public string UserName { get; set; } = string.Empty;
         public DateTime BookingDate { get; set; }
         public int EventId { get; set; }
