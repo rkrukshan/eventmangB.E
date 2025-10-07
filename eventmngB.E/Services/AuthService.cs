@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using EventManagementSystem.Data;
 using EventManagementSystem.Models;
+using System.Text;
 
 namespace EventManagementSystem.Services
 {
@@ -33,12 +34,15 @@ namespace EventManagementSystem.Services
             {
                 Username = request.Username.Trim(),
                 PasswordHash = passwordHash,
-                Role = "user", 
+                Role = "user",
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+
+            // Generate simple token
+            var token = GenerateSimpleToken(user);
 
             return new AuthResponse
             {
@@ -46,7 +50,8 @@ namespace EventManagementSystem.Services
                 Message = "User registered successfully",
                 Username = user.Username,
                 Role = user.Role,
-                UserId = user.Id
+                UserId = user.Id,
+                Token = token // Add token
             };
         }
 
@@ -67,13 +72,17 @@ namespace EventManagementSystem.Services
                 };
             }
 
+            // Generate simple token
+            var token = GenerateSimpleToken(user);
+
             return new AuthResponse
             {
                 Success = true,
                 Message = "Login successful",
                 Username = user.Username,
                 Role = user.Role,
-                UserId = user.Id
+                UserId = user.Id,
+                Token = token // Add token
             };
         }
 
@@ -92,14 +101,26 @@ namespace EventManagementSystem.Services
                     Message = "Access denied. Admin privileges required."
                 };
 
+            // Generate simple token
+            var token = GenerateSimpleToken(user);
+
             return new AuthResponse
             {
                 Success = true,
                 Message = "Admin login successful",
                 Username = user.Username,
                 Role = user.Role,
-                UserId = user.Id
+                UserId = user.Id,
+                Token = token // Add token
             };
+        }
+
+        private string GenerateSimpleToken(User user)
+        {
+            // Create a simple token format: base64(userId:username:timestamp)
+            var tokenData = $"{user.Id}:{user.Username}:{DateTime.UtcNow.Ticks}";
+            var tokenBytes = Encoding.UTF8.GetBytes(tokenData);
+            return Convert.ToBase64String(tokenBytes);
         }
 
         private bool IsReservedAdminUsername(string username)
